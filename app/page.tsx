@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { PublicNavbar } from "@/components/public-navbar";
 import { Button } from "@/components/ui/button";
@@ -5,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ClipboardList, Mic, LineChart, MapPin, Target, Zap, Trophy, User, LockKeyhole } from "lucide-react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
 export default function LandingPage() {
   return (
@@ -34,11 +37,12 @@ export default function LandingPage() {
                   <LockKeyhole size={17} strokeWidth={1.5}/>
                   Secure & Private
                 </div>
-                <Link href="/home">
-                  <Button className="bg-[#0F766E] text-white hover:bg-[#005C55] rounded-lg px-6 shadow-sm transition-all hover:-translate-y-0.5">
-                    Start Simulation <span className="ml-2">→</span>
-                  </Button>
-                </Link>
+                <Button 
+                  className="bg-[#0F766E] text-white hover:bg-[#005C55] rounded-lg px-6 shadow-sm transition-all hover:-translate-y-0.5"
+                  onClick={() => signIn("google", { callbackUrl: "/home" })}
+                >
+                  Start Simulation <span className="ml-2">→</span>
+                </Button>
               </div>
             </Card>
 

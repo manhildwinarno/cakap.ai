@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   ],
 };
 
+import { NextAuthProvider } from "@/components/providers/session-provider";
+import { Toaster } from "@/components/ui/sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,9 +44,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className={cn("min-h-dvh flex flex-col antialiased", inter.className)}>
-        <SmoothScrollProvider>
-          {children}
-        </SmoothScrollProvider>
+        <NextAuthProvider>
+          <SmoothScrollProvider>
+            {children}
+            <Toaster position="top-center" />
+          </SmoothScrollProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

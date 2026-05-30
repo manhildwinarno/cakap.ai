@@ -5,7 +5,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -73,9 +72,12 @@ model InterviewSession {
   id             String @id @default(cuid())
   userId         String
   jobDescription String @db.Text
+  targetRole     String
   language       String @default("en") // "en" | "id"
+  interviewStyle String @default("strict_hr") // "strict_hr" | "technical" | "casual"
   score          Int? // Overall readiness score (0-100)
   status         String @default("in_progress") // "in_progress" | "completed" | "cancelled"
+  totalQuestions Int    @default(5)
   feedbackData   Json? // Full AI evaluation JSON (question-by-question STAR analysis)
   chatHistory    Json? // Serialized chat messages for the session
 
