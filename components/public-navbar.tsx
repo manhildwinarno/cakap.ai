@@ -1,12 +1,26 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { signIn } from "next-auth/react";
 import { Menu } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader, SheetDescription } from "@/components/ui/sheet";
 
 export function PublicNavbar() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-outline-variant/20 transition-all">
       <div className="flex justify-between items-center h-16 px-lg max-w-container-max mx-auto px-6 lg:px-8">
@@ -15,6 +29,14 @@ export function PublicNavbar() {
           href="/" 
           className="text-2xl font-bold text-[#0F766E] tracking-tight flex items-center gap-2"
         >
+          <Image
+            src="/assets/cakap.ai-logo.webp"
+            alt="Cakap.AI logo"
+            width={50}
+            height={50}
+            className="object-contain"
+            priority
+          />
           Cakap.AI
         </Link>
 
@@ -51,20 +73,36 @@ export function PublicNavbar() {
           </Button>
 
           <div className="flex md:hidden">
-            <Sheet>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-[#3E4947]">
                   <Menu size={24} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[250px] sm:w-[300px]">
-                <div className="flex flex-col gap-6 mt-8">
-                  <Link href="#features" className="text-lg font-medium text-[#3E4947]">Features</Link>
-                  <Link href="#methodology" className="text-lg font-medium text-[#3E4947]">Methodology</Link>
-                  <div className="flex flex-col gap-3 mt-4">
-                    <Button variant="outline" className="w-full text-[#3E4947]" onClick={() => signIn("google", { callbackUrl: "/home" })}>Login</Button>
-                    <Button className="w-full bg-[#0F766E] text-white hover:bg-[#005C55]" onClick={() => signIn("google", { callbackUrl: "/home" })}>Sign Up</Button>
-                  </div>
+              <SheetContent side="right" className="w-[300px] sm:w-[350px] p-6">
+                <SheetHeader className="p-0">
+                  <SheetTitle className="text-left">
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src="/assets/cakap.ai-logo.webp"
+                        alt="Cakap.AI logo"
+                        width={32}
+                        height={32}
+                        className="object-contain"
+                      />
+                      <span className="text-xl font-bold text-[#0F766E] tracking-tight">Cakap.AI</span>
+                    </div>
+                  </SheetTitle>
+                  <SheetDescription className="sr-only">Public Navigation Menu</SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col space-y-4 mt-8">
+                  <Link href="#features" className="text-lg font-medium text-muted-foreground hover:text-primary transition-colors">Features</Link>
+                  <Link href="#methodology" className="text-lg font-medium text-muted-foreground hover:text-primary transition-colors">Methodology</Link>
+                </div>
+                <hr className="my-6 border-border" />
+                <div className="flex flex-col gap-3">
+                  <Button variant="outline" className="w-full text-[#3E4947]" onClick={() => signIn("google", { callbackUrl: "/home" })}>Login</Button>
+                  <Button className="w-full bg-[#0F766E] text-white hover:bg-[#005C55]" onClick={() => signIn("google", { callbackUrl: "/home" })}>Sign Up</Button>
                 </div>
               </SheetContent>
             </Sheet>

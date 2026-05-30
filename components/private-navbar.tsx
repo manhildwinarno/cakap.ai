@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, LogOut, Menu } from "lucide-react";
@@ -22,21 +24,43 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetTitle,
+  SheetHeader,
+  SheetDescription
 } from "@/components/ui/sheet";
 
 export function PrivateNavbar({ activeTab = 'home' }: { activeTab?: 'home' | 'history' | 'results' }) {
+  const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const userInitial = session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "U";
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-white border-b border-[#E2E8F0] h-16 flex items-center">
-      <div className="max-w-[1280px] mx-auto w-full flex justify-between items-center px-6 lg:px-8">
-        <div className="flex items-center gap-10">
+      <div className="max-w-[1280px] mx-auto w-full flex justify-between items-center px-6 lg:px-0">
+        <div className="flex justify-center items-center gap-25">
           <Link 
             href="/home" 
-            className="text-2xl font-bold text-[#0F766E] tracking-tight"
+            className="text-2xl font-bold text-[#0F766E] tracking-tight flex items-center gap-2"
           >
+            <Image
+              src="/assets/cakap.ai-logo.webp"
+              alt="Cakap.AI logo"
+              width={50}
+              height={50}
+              className="object-contain"
+              priority
+              />
             Cakap.AI
           </Link>
           
@@ -106,16 +130,42 @@ export function PrivateNavbar({ activeTab = 'home' }: { activeTab?: 'home' | 'hi
           </div>
 
           <div className="flex md:hidden">
-            <Sheet>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-[#3E4947] ml-2">
                   <Menu size={24} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[250px] sm:w-[300px]">
-                <div className="flex flex-col gap-6 mt-8">
-                  <Link href="/home" className={`text-lg font-medium ${activeTab === 'home' ? 'text-[#0F766E]' : 'text-[#3E4947]'}`}>Home</Link>
-                  <Link href="/history" className={`text-lg font-medium ${activeTab === 'history' ? 'text-[#0F766E]' : 'text-[#3E4947]'}`}>My History</Link>
+              <SheetContent side="right" className="w-[300px] sm:w-[350px] flex flex-col p-6">
+                <SheetHeader className="text-left p-0">
+                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                  <SheetDescription className="sr-only">Private Navigation Menu</SheetDescription>
+                  <div className="flex items-center gap-3 mt-4">
+                    <Avatar className="h-12 w-12 border border-[#E2E8F0]">
+                      <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "User"} />
+                      <AvatarFallback className="bg-[#0F766E]/10 text-[#0F766E]">
+                        {session?.user?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[#0F172A]">{session?.user?.name || "User"}</span>
+                      <span className="text-xs text-muted-foreground">{session?.user?.email || ""}</span>
+                    </div>
+                  </div>
+                </SheetHeader>
+                
+                <hr className="my-4 border-border" />
+                
+                <div className="flex flex-col space-y-2 flex-grow">
+                  <Link href="/home" className={`block py-2 text-base font-medium transition-colors hover:text-primary ${activeTab === 'home' ? 'text-[#0F766E]' : 'text-muted-foreground'}`}>Home</Link>
+                  <Link href="/history" className={`block py-2 text-base font-medium transition-colors hover:text-primary ${activeTab === 'history' ? 'text-[#0F766E]' : 'text-muted-foreground'}`}>My History</Link>
+                </div>
+
+                <div className="mt-auto pb-6">
+                  <Button variant="destructive" className="w-full justify-start gap-2" onClick={() => signOut({ callbackUrl: "/" })}>
+                    <LogOut size={16} />
+                    Log Out
+                  </Button>
                 </div>
               </SheetContent>
             </Sheet>
