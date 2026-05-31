@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "Cakap.AI — AI-Powered Interview & Presentation Coach",
-  description:
-    "Practice interviews with an AI coach that evaluates your responses using the S.T.A.R. methodology. Get actionable feedback, readiness scores, and improve your communication skills.",
+  description: "Platform simulasi wawancara cerdas dengan evaluasi S.T.A.R terstruktur yang ditenagai oleh AI.",
   keywords: [
     "AI interview coach",
     "mock interview",
@@ -27,10 +27,28 @@ export const metadata: Metadata = {
     "presentation practice",
     "Cakap AI",
   ],
+  applicationName: "Cakap.AI",
+  authors: [{ name: "Cakap.AI Team" }],
+  creator: "Cakap.AI",
+  openGraph: {
+    title: "Cakap.AI — AI-Powered Interview & Presentation Coach",
+    description: "Platform simulasi wawancara cerdas dengan evaluasi S.T.A.R terstruktur yang ditenagai oleh AI.",
+    images: [{ url: "/images/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+    siteName: "Cakap.AI",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cakap.AI — AI-Powered Interview & Presentation Coach",
+    description: "Platform simulasi wawancara cerdas dengan evaluasi S.T.A.R terstruktur yang ditenagai oleh AI.",
+    images: ["/images/og-image.png"],
+  },
 };
 
 import { NextAuthProvider } from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageProvider } from "@/components/language-provider";
 
 export default function RootLayout({
   children,
@@ -40,15 +58,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={cn(inter.variable, geistMono.variable)}
       suppressHydrationWarning
     >
-      <body className={cn("min-h-dvh flex flex-col antialiased", inter.className)}>
+      <body className={cn("min-h-dvh flex flex-col antialiased overflow-x-hidden", inter.className)}>
         <NextAuthProvider>
-          <SmoothScrollProvider>
-            {children}
-            <Toaster position="top-center" />
-          </SmoothScrollProvider>
+          <LanguageProvider>
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+              <SmoothScrollProvider>
+              {children}
+              <Toaster position="top-center" />
+            </SmoothScrollProvider>
+          </ThemeProvider>
+          </LanguageProvider>
         </NextAuthProvider>
       </body>
     </html>

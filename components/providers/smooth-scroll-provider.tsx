@@ -7,7 +7,6 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    // Initialize Lenis
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Smooth custom easeOutQuint curve
@@ -21,7 +20,6 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
 
     lenisRef.current = lenis;
 
-    // Run the animation frame loop
     let rafId: number;
     function raf(time: number) {
       lenis.raf(time);
@@ -38,7 +36,6 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
 
       const href = anchor.getAttribute("href");
 
-      // Check if it's a hash anchor for the current page
       if (
         href &&
         (href.startsWith("#") ||
@@ -48,7 +45,6 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
         const hash = anchor.hash || href.substring(href.indexOf("#"));
         if (!hash) return;
 
-        // Find the element on the current page
         const targetElement = document.querySelector(hash);
         if (targetElement && targetElement instanceof HTMLElement) {
           e.preventDefault();
@@ -60,7 +56,6 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           });
 
-          // Update URL hash without causing a page jump
           window.history.pushState(null, "", hash);
         }
       }
@@ -68,7 +63,6 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
 
     document.addEventListener("click", handleAnchorClick);
 
-    // Cleanup on component unmount
     return () => {
       cancelAnimationFrame(rafId);
       lenis.destroy();

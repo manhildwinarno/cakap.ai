@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Create a new session (called from /home)
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -33,7 +32,6 @@ export async function POST(req: Request) {
   }
 }
 
-// Update a session (called when interview finishes to save chat and feedback)
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);

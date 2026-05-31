@@ -1,20 +1,48 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY!.trim() });
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
+    const {
+      sessionId,
+      chatHistory = [],
+      currentQuestion,
+    } = body;
+
+    if (!sessionId) {
+      return NextResponse.json({ error: "Session ID is required" }, { status: 400 });
+    }
+
+    const interviewSession = await prisma.interviewSession.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!interviewSession) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+
+    if (interviewSession.userId !== session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     const {
       jobDescription,
       targetRole,
       interviewStyle,
       language,
-      chatHistory = [],
-      currentQuestion,
       totalQuestions,
-    } = body;
+    } = interviewSession;
 
     const isFirstQuestion = chatHistory.length === 0 || currentQuestion === 1;
     const isFinalTurn = currentQuestion >= totalQuestions && !isFirstQuestion;
@@ -31,18 +59,18 @@ export async function POST(req: Request) {
 
     let outputDirective = "";
     if (isFirstQuestion) {
-      outputDirective = `This is the START of the interview. Acknowledge the candidate and ask the VERY FIRST interview question based on the job description.
-      Return JSON EXACTLY like this:
-      {
-        "evaluation_of_last_answer": null,
-        "next_question": "<your first question>",
-        "question_type": "Behavioral",
-        "is_final": false
-      }`;
+      outputDirective = `STEP 1: VALIDATION (STRICT)
+      Analyze the 'Role' and 'Job Description' provided. If they are obvious gibberish (e.g., random keyboard smashes like 'asdfg'), entirely empty, completely nonsensical, or if the input is completely unrelated to a professional job, career, or technical context (e.g., it is a recipe, a random story, or a joke), you MUST reject it by returning ONLY the following exact JSON and nothing else:
+      { "error": "INVALID_CONTEXT" }
+      
+      STEP 2: GENERATION
+      If the role and description are valid (even if they are brief or simple), accept them. Start the interview by generating the FIRST interview question. 
+      CRITICAL: If the input is valid, DO NOT return JSON. Return ONLY the interview question as plain text. Do not add introductory conversational text.`;
     } else if (isFinalTurn) {
-       outputDirective = `This is the FINAL question (${currentQuestion}/${totalQuestions}). 
-       Evaluate the user's answer using the S.T.A.R method and return the comprehensive final evaluation.
-       Return JSON EXACTLY like this:
+       outputDirective = `CRITICAL INSTRUCTION FOR FINAL EVALUATION:
+       You are generating the final interview report for question (${currentQuestion}/${totalQuestions}). 
+       DO NOT return a 'next_question'. Evaluate the user's answer using the S.T.A.R method.
+       You MUST return ONLY a JSON object with this exact structure:
        {
          "is_final": true,
          "final_evaluation": {
@@ -65,7 +93,8 @@ export async function POST(req: Request) {
              }
            ]
          }
-       }`;
+       }
+       Failure to use this exact schema will crash the system.`;
     } else {
        outputDirective = `This is question ${currentQuestion} of ${totalQuestions}.
        Evaluate the user's LAST answer using the STAR method, then ask the NEXT question.
@@ -91,11 +120,10 @@ export async function POST(req: Request) {
     CRITICAL: Before generating your next question, review the chat history. You MUST NOT repeat any question that has already been asked. Ensure your next question progresses the interview logically.
 
     OUTPUT FORMAT:
-    You MUST return ONLY valid JSON.
+    ${isFirstQuestion ? '' : 'You MUST return ONLY valid JSON.'}
     ${outputDirective}
     `.trim();
 
-    // Map history to the new SDK structure
     const geminiHistory = chatHistory.length > 1 ? chatHistory.slice(0, -1).map((msg: any) => ({
       role: msg.role === "ai" ? "model" : "user",
       parts: [{ text: msg.content }],
@@ -105,7 +133,6 @@ export async function POST(req: Request) {
       ? "Hello, I am ready for the interview. Please introduce yourself and ask the first question." 
       : chatHistory[chatHistory.length - 1]?.content || "Continue.";
 
-    // Append the latest user message to the contents array
     const finalContents = [
       ...geminiHistory,
       { role: "user", parts: [{ text: userMessageText }] }
@@ -125,7 +152,7 @@ export async function POST(req: Request) {
             contents: finalContents,
             config: {
               systemInstruction: systemPrompt,
-              responseMimeType: "application/json",
+              ...(isFirstQuestion ? {} : { responseMimeType: "application/json" }),
               temperature: 0.7,
             }
           });
@@ -133,10 +160,28 @@ export async function POST(req: Request) {
           const responseText = response.text;
           console.log("[GEMINI RAW OUTPUT]:", responseText);
 
-          const cleanText = responseText!.replace(/```json/gi, '').replace(/```/g, '').trim();
-          const parsed = JSON.parse(cleanText);
-
-          return NextResponse.json(parsed);
+          let parsed;
+          try {
+            const cleanText = responseText!.replace(/```json/gi, '').replace(/```/g, '').trim();
+            parsed = JSON.parse(cleanText);
+            
+            if (parsed.error === "INVALID_CONTEXT") {
+              return NextResponse.json({ error: "INVALID_CONTEXT" }, { status: 400 });
+            }
+            
+            return NextResponse.json(parsed);
+          } catch (e) {
+            // If JSON parsing fails, it means the AI correctly generated a plain text question.
+            if (isFirstQuestion) {
+              return NextResponse.json({
+                next_question: responseText!.trim(),
+                question_type: "Behavioral",
+                is_final: false
+              });
+            } else {
+              throw e;
+            }
+          }
 
         } catch (error: any) {
           lastError = error;
@@ -162,14 +207,14 @@ export async function POST(req: Request) {
     // All models exhausted
     console.error("[API ROUTE ERROR]: All models exhausted.", lastError);
     return NextResponse.json(
-      { error: "AI quota exceeded. Please wait a minute and try again.", details: String(lastError) },
+      { error: "RATE_LIMIT" },
       { status: 429 }
     );
 
   } catch (error) {
     console.error("[API ROUTE ERROR]:", error);
     return NextResponse.json(
-      { error: "AI processing failed", details: String(error) },
+      { error: "SERVER_ERROR", message: "AI processing failed", details: String(error) },
       { status: 500 }
     );
   }
