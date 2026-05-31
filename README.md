@@ -11,6 +11,7 @@ Cakap.AI is an intelligent mock interview simulator powered by the **Google Gemi
 ## ✨ Features
 
 ### 🏠 Landing Page (`/`)
+
 - Bilingual marketing page (**EN / ID**) with live language toggle
 - Hero section with animated mockup, CTA card with Job Description input
 - **"How It Works"** 3-step explainer (Input JD → AI Simulation → S.T.A.R Feedback)
@@ -18,10 +19,12 @@ Cakap.AI is an intelligent mock interview simulator powered by the **Google Gemi
 - Responsive public navbar with mobile sheet menu
 
 ### 🔐 Authentication
+
 - Google OAuth via **NextAuth.js** (Auth.js)
 - Secure session handling with PostgreSQL persistence via Prisma
 
 ### 🎛️ Home Dashboard (`/home`)
+
 - Authenticated setup form for starting a new interview session
 - Configurable fields:
   - **Target Role** — the position being applied for
@@ -32,6 +35,7 @@ Cakap.AI is an intelligent mock interview simulator powered by the **Google Gemi
 - Input validation with AI Bouncer (rejects gibberish before hitting Gemini)
 
 ### 🤖 Simulation Room (`/simulation`)
+
 - Immersive full-screen interview environment (no navbar)
 - Real-time **AI interviewer** powered by Gemini API
 - **Dual input modes:**
@@ -45,6 +49,7 @@ Cakap.AI is an intelligent mock interview simulator powered by the **Google Gemi
 - Session state managed via `sessionId` URL param + API route
 
 ### 📊 Results & Evaluation (`/results/[id]`)
+
 - Full **S.T.A.R. evaluation report** for the completed session
 - **Overall Readiness Score** (0–100) with color-coded feedback ring
 - **Key Strengths** and **Areas to Improve** summary
@@ -55,22 +60,26 @@ Cakap.AI is an intelligent mock interview simulator powered by the **Google Gemi
 - Graceful fallback guard: if Gemini returns an unexpected schema at session end, the app retries evaluation rather than crashing
 
 ### 📋 Interview History (`/history`)
+
 - Paginated list of all past interview sessions
 - Filterable by time range: Last 7 Days / Last 30 Days / All Time
 - Searchable by role
 - Direct link to each session's result report
 
 ### 💼 Job Board (`/jobs`)
+
 - Curated job listings with bilingual role titles and descriptions
 - **"Practice This Interview"** button pre-fills the Home Dashboard with the job's role and JD
 - 6 pre-loaded listings across roles: Frontend Developer, IoT Architect, Network Engineer, Go Backend Developer, Data Scientist, UX/UI Designer
 
 ### 🌐 Features Page (`/features`)
+
 - Detailed feature cards (S.T.A.R Evaluation, Dynamic Personas, History Tracking, Bilingual Support)
 - Comparison table: Cakap.AI vs generic alternatives
 - Animated hero image with Framer Motion float effect
 
 ### 🔔 Notifications (Private Navbar)
+
 - Popover notification tray (Shadcn Popover)
 - Static system notifications with unread indicator dot
 - "Mark as read" on open
@@ -81,9 +90,9 @@ Cakap.AI is an intelligent mock interview simulator powered by the **Google Gemi
 
 Full bilingual support across all public pages:
 
-| Language | Key |
-|---|---|
-| 🇺🇸 English | `en` |
+| Language      | Key  |
+| ------------- | ---- |
+| 🇺🇸 English    | `en` |
 | 🇮🇩 Indonesian | `id` |
 
 - Language preference persisted in `localStorage`
@@ -94,20 +103,20 @@ Full bilingual support across all public pages:
 
 ## 🛠️ Tech Stack
 
-| Category | Technology |
-|---|---|
-| **Framework** | Next.js 16.2.6 (App Router) |
-| **Language** | TypeScript 5 |
-| **Styling** | Tailwind CSS v4 |
-| **UI Components** | shadcn/ui + Radix UI primitives |
-| **Icons** | Lucide React |
-| **Animations** | Framer Motion v12 |
+| Category           | Technology                           |
+| ------------------ | ------------------------------------ |
+| **Framework**      | Next.js 16.2.6 (App Router)          |
+| **Language**       | TypeScript 5                         |
+| **Styling**        | Tailwind CSS v4                      |
+| **UI Components**  | shadcn/ui + Radix UI primitives      |
+| **Icons**          | Lucide React                         |
+| **Animations**     | Framer Motion v12                    |
 | **Authentication** | NextAuth.js (Auth.js) — Google OAuth |
-| **Database** | PostgreSQL via Prisma ORM |
-| **AI Service** | Google Gemini API (`@google/genai`) |
-| **Smooth Scroll** | Lenis |
-| **Toasts** | Sonner |
-| **Forms** | React Hook Form + Zod |
+| **Database**       | PostgreSQL via Prisma ORM            |
+| **AI Service**     | Google Gemini API (`@google/genai`)  |
+| **Smooth Scroll**  | Lenis                                |
+| **Toasts**         | Sonner                               |
+| **Forms**          | React Hook Form + Zod                |
 
 ---
 
@@ -206,17 +215,21 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 🧠 AI System Design
 
 ### Session Flow
+
 1. User submits a Role + Job Description → stored as a session record in PostgreSQL
 2. `POST /api/interview` is called on each user answer
 3. The API Route sends the full chat history + JD context to Gemini
 4. Gemini returns a **turn JSON** (score, feedback, next question) or a **final evaluation JSON** (overall score, strengths, per-question analysis)
 
 ### AI Bouncer (Input Validation)
+
 Before any Gemini call, the system prompt enforces a two-phase check:
+
 - **STEP 1 — Validation:** Rejects obvious gibberish, keyboard mashes, or irrelevant inputs (e.g., food recipes in a software JD field)
 - **STEP 2 — Generation:** Only proceeds to question generation if the input passes context validation
 
 ### Rate Limit Handling
+
 - The API route cycles through multiple Gemini model variants on `429 RESOURCE_EXHAUSTED`
 - Frontend displays a graceful `"System Busy"` alert with a **Retry** button instead of crashing
 
@@ -236,7 +249,7 @@ Before any Gemini call, the system prompt enforces a two-phase check:
 
 ## 📄 License
 
-This project is developed for **Google JuaraVibeCoding 2026** competition purposes.
+This project is developed for **Google JuaraVibeCoding 2026**.
 
 ---
 
